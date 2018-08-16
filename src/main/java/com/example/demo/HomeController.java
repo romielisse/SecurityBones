@@ -12,16 +12,19 @@ import javax.validation.Valid;
 public class HomeController {
     @Autowired
     private UserService userService;
+	
+	@Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/register")
     public String showRegistrationPage(Model model) {
         model.addAttribute("user", new User());
-        return "/registration";
+        return "registration";
     }
 
     @PostMapping("/register")
     public String processRegistrationPage(@Valid @ModelAttribute("user") User user, BindingResult result, Model model) {
-        model.addAttribute("user",user);
+
         if(result.hasErrors()) {
             return "registration";
         }

@@ -14,8 +14,10 @@
 
 1. **Create a Spring Boot Application**
 	* Name it SpringBootSecurity
-	* Add the dependencies for security, web and thymeleaf
+	* Add the dependencies for security, web, thymeleaf, H2, JPA, and devtools
 	* Hit next until you finish the wizard, and then wait until it's done.
+	* Note: As you're typing out your code, you may notice red underlining in your
+	code. Ignore these until everything has been typed up.
 
 
 2. **Setup H2**
@@ -24,31 +26,16 @@
     	* Add the following xml right before the line that reads:  &lt;/dependencies>
 ```xml
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity4</artifactId>
 		</dependency>
 ```
 
-
 Edit the application.properties file to look like this:
 ```
 spring.datasource.url=jdbc:h2:mem:testdb
 spring.h2.console.enabled=true
-spring.h2.console.path=/h2
+spring.h2.console.path=/h2-console
 spring.jpa.hibernate.ddl-auto=create
 ```
 
@@ -194,7 +181,7 @@ public class Role {
 		import org.springframework.security.crypto.password.PasswordEncoder;
 		import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-		// This is a file that sets up the applicaition to restrict access. By
+		// This is a file that sets up the application to restrict access. By
 		// default, if access is not specified, it is denied. You have to
 		// specifically permit access to each page, directory or group of pages in
 		// your application. The class you create (SecurityConfiguration) extends
@@ -222,7 +209,7 @@ public class Role {
 				}
 
 				// configure()
-				// This overrides the default configure method, configures users who can
+				// This overrides the default configure method that configures users who can
 				// access the application. By default, Spring Boot will provide a new
 				// random password assigned to the user "user" when it starts up, if you
 				// do not include this method.
@@ -235,7 +222,7 @@ public class Role {
 				protected void configure(HttpSecurity http) throws Exception{
 						http
 						.authorizeRequests()
-						.antMatchers("/css/**","/", "/h2/**", "/register").permitAll()
+						.antMatchers("/css/**","/", "/h2-console/**", "/register").permitAll()
 						.anyRequest().authenticated()
 						.and()
 						.formLogin().loginPage("/login").permitAll() // Must be on it's own line
@@ -272,88 +259,7 @@ public class Role {
 	    }
 		}
 		```
-
-### antMatcher
-
-Allows configuring the HttpSecurity to only be invoked when matching the
-provided ant pattern.
-
-#### Ant Pattern Matcher
-
-PathMatcher implementation for Ant-style path patterns. Part of this mapping
-code has been kindly borrowed from Apache Ant.
-
-```
-The mapping matches URLs using the following rules:
-? matches one character
-* matches zero or more characters
-** matches zero or more directories in a path
-{spring:[a-z]+} matches the regexp [a-z]+ as a path variable named "spring"
-```
-
-### authorizeRequests
-
-This tells your application which requests should be authorized. In this
-example, you are telling the application that any request that is authenticated
-should be permitted. Right now, this means that if a user enters a correct
-user/password combination, he/she will be directed to the default route.
-
-The most basic example is to configure all URLs to require the role "ROLE_USER".
-The configuration below requires authentication to every URL and will grant
-access to both the user "admin" and "user".
-
-```
-@Override
-        protected void configure(HttpSecurity http) throws Exception {
-				http.authorizeRequests()
-					.antMatchers("/admin/**")
-					.hasRole("ADMIN")
-					.antMatchers("/**")
-					.hasRole("USER")
-					.and().formLogin();
-        }
-```
-
-Note that the matchers are considered in order. Therefore, the following is
-invalid because the first matcher matches every request and will never get to
-the second mapping:
-
-```
- http.authorizeRequests()
- 	.antMatchers("/**").hasRole("USER")
- 	.antMatchers("/admin/**").hasRole("ADMIN")
- ```
-
-### Login Form
-
-**.formLogin().loginPage("/login").permitAll()**
-
-This means that you are expecting a login form, which will display when you
-visit the route /login, and everyone can see it, even if they are not
-authenticated. This is therefore the page that people will see if they have not 
-logged in yet, before they are directed to the page that they can see after
-logging in.
-
- ### httpBasic
-
- Configures HTTP Basic authentication. HTTP Basic authentication (BA)
- implementation is the simplest technique for enforcing access controls to web
- resources because it does not require cookies, session identifiers, or login
- pages; rather, HTTP Basic authentication uses standard fields in the HTTP
- header, removing the need for handshakes.
-
- ```
- http.authorizeRequests()
- 	.antMatchers("/**").hasRole("USER")
-	.and().httpBasic();
- ```
-
- ### formLogin
-
-Specifies to support form based authentication. If loginPage(String) is not
-specified, Spring's default login page will be generated. The default login
-form will also include messages for incorrect attempts.
-
+		
 
 15. **Create the SSUserDetailsService**
     * Right click on com.example.demo and click New -> Class
@@ -538,13 +444,13 @@ form will also include messages for incorrect attempts.
 	    @GetMapping("/register")
 	    public String showRegistrationPage(Model model) {
 	        model.addAttribute("user", new User());
-	        return "/registration";
+	        return "registration";
 	    }
 
 	    @PostMapping("/register")
 	    public String processRegistrationPage(@Valid @ModelAttribute("user") User user,
 								BindingResult result, Model model) {
-	        model.addAttribute("user",user);
+
 	        if(result.hasErrors()) {
 	            return "registration";
 	        }
@@ -760,13 +666,14 @@ form will also include messages for incorrect attempts.
 	</html>
 	```
 24. **Add Bootstrap stylesheet**
-  	* Right click on templates and click New -> Directory
-	  * Name it static
-	  * Under the new "static" folder, create a new folder "css"
-	  * Go to https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css and save the CSS text as "boostrap.min.css" under the CSS folder
+	  * If the "static" directory does not exist under the "templates"
+	  folder, add it under the "templates" directory
+	  * Under the new "static" folder, create a new directory "css"
+	  * Go to https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css and save 
+	  the CSS text as "bootstrap.min.css" under the CSS folder
 
 25. **Add custom stylesheet**
-  	* Right click on the css folder and right-click --> New --> Stylesheet
+	  * Right click on the css folder and right-click --> New --> Stylesheet
 	  * Name it style.css
 	  * Edit it to look like this:
 
@@ -798,6 +705,87 @@ If you log out and go to the "Register" link, you should see this:
 
 Try creating a new user and then logging in with that user.
 
-## Congratulations!
+## What's Going On?
 
-You're ready to add basic security to your Spring Boot web application. This will help to ensure that people are who they say they are (because they use the appropriate passwords to sign in), and that they can access information within your application because they are authorized to have access to it, since they are assigned authorities.
+Congratulations! You're ready to add basic security to your Spring Boot web application. This will help to ensure that people are who they say they are (because they use the appropriate passwords to sign in), and that they can access information within your application because they are authorized to have access to it, since they are assigned authorities.
+
+### antMatcher
+
+Allows configuring the HttpSecurity to only be invoked when matching the
+provided ant pattern.
+
+#### Ant Pattern Matcher
+
+PathMatcher implementation for Ant-style path patterns. Part of this mapping
+code has been kindly borrowed from Apache Ant.
+
+```
+The mapping matches URLs using the following rules:
+? matches one character
+* matches zero or more characters
+** matches zero or more directories in a path
+{spring:[a-z]+} matches the regexp [a-z]+ as a path variable named "spring"
+```
+
+### authorizeRequests
+
+This tells your application which requests should be authorized. In this
+example, you are telling the application that any request that is authenticated
+should be permitted. Right now, this means that if a user enters a correct
+user/password combination, he/she will be directed to the default route.
+
+The most basic example is to configure all URLs to require the role "ROLE_USER".
+The configuration below requires authentication to every URL and will grant
+access to both the user "admin" and "user".
+
+```
+@Override
+        protected void configure(HttpSecurity http) throws Exception {
+				http.authorizeRequests()
+					.antMatchers("/admin/**")
+					.hasRole("ADMIN")
+					.antMatchers("/**")
+					.hasRole("USER")
+					.and().formLogin();
+        }
+```
+
+Note that the matchers are considered in order. Therefore, the following is
+invalid because the first matcher matches every request and will never get to
+the second mapping:
+
+```
+ http.authorizeRequests()
+ 	.antMatchers("/**").hasRole("USER")
+ 	.antMatchers("/admin/**").hasRole("ADMIN")
+ ```
+
+### Login Form
+
+**.formLogin().loginPage("/login").permitAll()**
+
+This means that you are expecting a login form, which will display when you
+visit the route /login, and everyone can see it, even if they are not
+authenticated. This is therefore the page that people will see if they have not 
+logged in yet, before they are directed to the page that they can see after
+logging in.
+
+ ### httpBasic
+
+ Configures HTTP Basic authentication. HTTP Basic authentication (BA)
+ implementation is the simplest technique for enforcing access controls to web
+ resources because it does not require cookies, session identifiers, or login
+ pages; rather, HTTP Basic authentication uses standard fields in the HTTP
+ header, removing the need for handshakes.
+
+ ```
+ http.authorizeRequests()
+ 	.antMatchers("/**").hasRole("USER")
+	.and().httpBasic();
+ ```
+
+ ### formLogin
+
+Specifies to support form based authentication. If loginPage(String) is not
+specified, Spring's default login page will be generated. The default login
+form will also include messages for incorrect attempts.
