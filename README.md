@@ -48,7 +48,7 @@ Edit the application.properties file to look like this:
 ```
 spring.datasource.url=jdbc:h2:mem:testdb
 spring.h2.console.enabled=true
-spring.h2.console.path=/h2-console
+spring.h2.console.path=/h2
 spring.jpa.hibernate.ddl-auto=create
 ```
 
@@ -252,7 +252,8 @@ public class Role {
 						http
 						.csrf().disable(); // Only for the H2 console, NOT IN PRODUCTION
 						http
-						.headers().frameOptions().disable(); // Only for the H2 console, NOT IN PRODUCTION
+						.headers().frameOptions().disable(); 
+						// Only for the H2 console, NOT IN PRODUCTION
 	    }
 
 	    @Override
@@ -329,8 +330,9 @@ the second mapping:
 
 This means that you are expecting a login form, which will display when you
 visit the route /login, and everyone can see it, even if they are not
-authenticated. This is therefore the page that people will see if they have not logged in yet,
-before they are directed to the page that they can see after logging in.
+authenticated. This is therefore the page that people will see if they have not 
+logged in yet, before they are directed to the page that they can see after
+logging in.
 
  ### httpBasic
 
