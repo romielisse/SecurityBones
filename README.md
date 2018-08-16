@@ -781,18 +781,18 @@ form will also include messages for incorrect attempts.
 
 
 26. **Run your application and open a browser, and you should see this:**
-![](../src/main/resources/static/img/onload.png)
+![](src/main/resources/static/img/onload.png)
 
 If you click on the Login link, you should see this:
-![](../src/main/resources/static/img/login.png)
+![](src/main/resources/static/img/login.png)
 
 You should be able to login with the account bob and password password.
 
 After you log in, you should see the secure page:
-![](../src/main/resources/static/img/loadindex.png)
+![](src/main/resources/static/img/loadindex.png)
 
 If you log out and go to the "Register" link, you should see this:
-![](../src/main/resources/static/img/register.png)
+![](src/main/resources/static/img/register.png)
 
 Try creating a new user and then logging in with that user.
 
